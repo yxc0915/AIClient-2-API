@@ -300,12 +300,13 @@ export class ClaudeConverter extends BaseConverter {
                         role: "assistant",
                         content: "",
                     },
+                    logprobs: null,
                     finish_reason: "stop",
                 }],
                 usage: {
-                    prompt_tokens: claudeResponse.usage?.input_tokens || 0,
-                    completion_tokens: claudeResponse.usage?.output_tokens || 0,
-                    total_tokens: (claudeResponse.usage?.input_tokens || 0) + (claudeResponse.usage?.output_tokens || 0),
+                    prompt_tokens: claudeResponse?.usage?.input_tokens || 0,
+                    completion_tokens: claudeResponse?.usage?.output_tokens || 0,
+                    total_tokens: (claudeResponse?.usage?.input_tokens || 0) + (claudeResponse?.usage?.output_tokens || 0),
                 },
             };
         }
@@ -384,13 +385,13 @@ export class ClaudeConverter extends BaseConverter {
             choices: [{
                 index: 0,
                 message: message,
+                logprobs: null,
                 finish_reason: finishReason,
             }],
             usage: {
                 prompt_tokens: claudeResponse.usage?.input_tokens || 0,
                 completion_tokens: claudeResponse.usage?.output_tokens || 0,
                 total_tokens: (claudeResponse.usage?.input_tokens || 0) + (claudeResponse.usage?.output_tokens || 0),
-                cached_tokens: claudeResponse.usage?.cache_read_input_tokens || 0,
                 prompt_tokens_details: {
                     cached_tokens: claudeResponse.usage?.cache_read_input_tokens || 0
                 }
@@ -404,163 +405,123 @@ export class ClaudeConverter extends BaseConverter {
     toOpenAIStreamChunk(claudeChunk, model) {
         if (!claudeChunk) return null;
 
-        // 处理 Claude 流式事件
-        const chunkId = `chatcmpl-${uuidv4()}`;
-        const timestamp = Math.floor(Date.now() / 1000);
+        // Lazily initialise per-stream state so all chunks in one stream share
+        // the same id / timestamp (OpenAI spec: "Each chunk has the same ID").
+        if (claudeChunk.type === 'message_start') {
+            this._streamId = `chatcmpl-${uuidv4()}`;
+            this._streamCreated = Math.floor(Date.now() / 1000);
+            this._nextToolCallIndex = 0;
+            this._toolCallIndexMap = {};
+        }
+        const chunkId = this._streamId || `chatcmpl-${uuidv4()}`;
+        const timestamp = this._streamCreated || Math.floor(Date.now() / 1000);
 
-        // message_start 事件
+        const base = { id: chunkId, object: "chat.completion.chunk", created: timestamp, model };
+
+        // message_start -> first chunk with role
         if (claudeChunk.type === 'message_start') {
             return {
-                id: chunkId,
-                object: "chat.completion.chunk",
-                created: timestamp,
-                model: model,
-                system_fingerprint: "",
+                ...base,
                 choices: [{
                     index: 0,
-                    delta: {
-                        role: "assistant",
-                        content: ""
-                    },
+                    delta: { role: "assistant", content: "" },
+                    logprobs: null,
                     finish_reason: null
                 }],
-                usage: {
-                    prompt_tokens: claudeChunk.message?.usage?.input_tokens || 0,
-                    completion_tokens: 0,
-                    total_tokens: claudeChunk.message?.usage?.input_tokens || 0,
-                    cached_tokens: claudeChunk.message?.usage?.cache_read_input_tokens || 0
-                }
+                usage: null
             };
         }
 
-        // content_block_start 事件
+        // content_block_start
         if (claudeChunk.type === 'content_block_start') {
             const contentBlock = claudeChunk.content_block;
-            
-            // 处理 tool_use 类型
+
             if (contentBlock && contentBlock.type === 'tool_use') {
+                // Allocate a sequential tool_calls index (0-based) and record
+                // the mapping from Claude's block index so that subsequent
+                // input_json_delta chunks use the same tool_calls index.
+                if (!this._toolCallIndexMap) this._toolCallIndexMap = {};
+                const tcIdx = this._nextToolCallIndex = (this._nextToolCallIndex || 0);
+                this._toolCallIndexMap[claudeChunk.index] = tcIdx;
+                this._nextToolCallIndex++;
+
                 return {
-                    id: chunkId,
-                    object: "chat.completion.chunk",
-                    created: timestamp,
-                    model: model,
-                    system_fingerprint: "",
+                    ...base,
                     choices: [{
                         index: 0,
                         delta: {
                             tool_calls: [{
-                                index: claudeChunk.index || 0,
+                                index: tcIdx,
                                 id: contentBlock.id,
                                 type: "function",
-                                function: {
-                                    name: contentBlock.name,
-                                    arguments: ""
-                                }
+                                function: { name: contentBlock.name, arguments: "" }
                             }]
                         },
+                        logprobs: null,
                         finish_reason: null
                     }]
                 };
             }
 
-            // 处理 text 类型
-            return {
-                id: chunkId,
-                object: "chat.completion.chunk",
-                created: timestamp,
-                model: model,
-                system_fingerprint: "",
-                choices: [{
-                    index: 0,
-                    delta: {
-                        content: ""
-                    },
-                    finish_reason: null
-                }]
-            };
+            // text / thinking block start — skip empty placeholder chunk
+            return null;
         }
 
-        // content_block_delta 事件
+        // content_block_delta
         if (claudeChunk.type === 'content_block_delta') {
             const delta = claudeChunk.delta;
-            
-            // 处理 text_delta
+
             if (delta && delta.type === 'text_delta') {
                 return {
-                    id: chunkId,
-                    object: "chat.completion.chunk",
-                    created: timestamp,
-                    model: model,
-                    system_fingerprint: "",
+                    ...base,
                     choices: [{
                         index: 0,
-                        delta: {
-                            content: delta.text || ""
-                        },
+                        delta: { content: delta.text || "" },
+                        logprobs: null,
                         finish_reason: null
                     }]
                 };
             }
 
-            // 处理 thinking_delta (推理内容)
             if (delta && delta.type === 'thinking_delta') {
                 return {
-                    id: chunkId,
-                    object: "chat.completion.chunk",
-                    created: timestamp,
-                    model: model,
-                    system_fingerprint: "",
+                    ...base,
                     choices: [{
                         index: 0,
-                        delta: {
-                            reasoning_content: delta.thinking || ""
-                        },
+                        delta: { reasoning_content: delta.thinking || "" },
+                        logprobs: null,
                         finish_reason: null
                     }]
                 };
             }
 
-            // 处理 input_json_delta (tool arguments)
             if (delta && delta.type === 'input_json_delta') {
+                const tcIdx = (this._toolCallIndexMap && this._toolCallIndexMap[claudeChunk.index] !== undefined)
+                    ? this._toolCallIndexMap[claudeChunk.index]
+                    : 0;
                 return {
-                    id: chunkId,
-                    object: "chat.completion.chunk",
-                    created: timestamp,
-                    model: model,
-                    system_fingerprint: "",
+                    ...base,
                     choices: [{
                         index: 0,
                         delta: {
                             tool_calls: [{
-                                index: claudeChunk.index || 0,
-                                function: {
-                                    arguments: delta.partial_json || ""
-                                }
+                                index: tcIdx,
+                                function: { arguments: delta.partial_json || "" }
                             }]
                         },
+                        logprobs: null,
                         finish_reason: null
                     }]
                 };
             }
         }
 
-        // content_block_stop 事件
+        // content_block_stop — no OpenAI equivalent, skip
         if (claudeChunk.type === 'content_block_stop') {
-            return {
-                id: chunkId,
-                object: "chat.completion.chunk",
-                created: timestamp,
-                model: model,
-                system_fingerprint: "",
-                choices: [{
-                    index: 0,
-                    delta: {},
-                    finish_reason: null
-                }]
-            };
+            return null;
         }
 
-        // message_delta 事件
+        // message_delta -> finish chunk with usage
         if (claudeChunk.type === 'message_delta') {
             const stopReason = claudeChunk.delta?.stop_reason;
             const finishReason = stopReason === 'end_turn' ? 'stop' :
@@ -569,64 +530,48 @@ export class ClaudeConverter extends BaseConverter {
                                 stopReason || 'stop';
 
             const chunk = {
-                id: chunkId,
-                object: "chat.completion.chunk",
-                created: timestamp,
-                model: model,
-                system_fingerprint: "",
+                ...base,
                 choices: [{
                     index: 0,
                     delta: {},
+                    logprobs: null,
                     finish_reason: finishReason
                 }]
             };
 
-            if(claudeChunk.usage){
+            if (claudeChunk.usage) {
                 chunk.usage = {
                     prompt_tokens: claudeChunk.usage.input_tokens || 0,
                     completion_tokens: claudeChunk.usage.output_tokens || 0,
                     total_tokens: (claudeChunk.usage.input_tokens || 0) + (claudeChunk.usage.output_tokens || 0),
-                    cached_tokens: claudeChunk.usage.cache_read_input_tokens || 0,
                     prompt_tokens_details: {
                         cached_tokens: claudeChunk.usage.cache_read_input_tokens || 0
                     }
                 };
             }
 
+            // Clean up per-stream state
+            this._streamId = null;
+            this._streamCreated = null;
+            this._nextToolCallIndex = 0;
+            this._toolCallIndexMap = {};
+
             return chunk;
         }
 
-        // message_stop 事件
+        // message_stop — handled by handleStreamRequest (sends data: [DONE])
         if (claudeChunk.type === 'message_stop') {
             return null;
-            // const chunk = {
-            //     id: chunkId,
-            //     object: "chat.completion.chunk",
-            //     created: timestamp,
-            //     model: model,
-            //     system_fingerprint: "",
-            //     choices: [{
-            //         index: 0,
-            //         delta: {},
-            //         finish_reason: 'stop'
-            //     }]
-            // };
-            // return chunk;
         }
 
-        // 兼容旧格式：如果是字符串，直接作为文本内容
+        // Legacy: plain string as text content
         if (typeof claudeChunk === 'string') {
             return {
-                id: chunkId,
-                object: "chat.completion.chunk",
-                created: timestamp,
-                model: model,
-                system_fingerprint: "",
+                ...base,
                 choices: [{
                     index: 0,
-                    delta: {
-                        content: claudeChunk
-                    },
+                    delta: { content: claudeChunk },
+                    logprobs: null,
                     finish_reason: null
                 }]
             };

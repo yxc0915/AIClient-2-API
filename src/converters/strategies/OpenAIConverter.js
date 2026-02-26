@@ -153,8 +153,10 @@ export class OpenAIConverter extends BaseConverter {
             const role = message.role === 'assistant' ? 'assistant' : 'user';
             let content = [];
 
+            const hasNativeToolUse = Array.isArray(message.content) &&
+                message.content.some(b => b && (b.type === 'tool_use' || b.type === 'tool_result'));
+
             if (message.role === 'tool') {
-                // 工具结果消息
                 let toolContent = message.content;
                 if (typeof toolContent === 'object' && toolContent !== null) {
                     toolContent = JSON.stringify(toolContent);
@@ -165,18 +167,40 @@ export class OpenAIConverter extends BaseConverter {
                     content: toolContent
                 });
                 claudeMessages.push({ role: 'user', content: content });
+            } else if (hasNativeToolUse) {
+                // Anthropic-native format: content array contains tool_use / tool_result blocks directly.
+                // Pass them through as-is, only filtering out unsupported block types.
+                const blocks = [];
+                for (const block of message.content) {
+                    if (!block) continue;
+                    if (block.type === 'tool_use' || block.type === 'tool_result') {
+                        blocks.push(block);
+                    } else if (block.type === 'text' && block.text) {
+                        blocks.push({ type: 'text', text: block.text.trim() });
+                    } else if (block.type === 'thinking' && (block.thinking || block.text)) {
+                        blocks.push(block);
+                    }
+                }
+                if (blocks.length > 0) {
+                    const msgRole = blocks.some(b => b.type === 'tool_result') ? 'user' : role;
+                    claudeMessages.push({ role: msgRole, content: blocks });
+                }
             } else if (message.role === 'assistant' && (message.tool_calls?.length || message.function_calls?.length)) {
-                // 助手工具调用消息 - 支持tool_calls和function_calls
                 const calls = message.tool_calls || message.function_calls || [];
-                const toolUseBlocks = calls.map(tc => ({
-                    type: 'tool_use',
-                    id: tc.id,
-                    name: tc.function.name,
-                    input: safeParseJSON(tc.function.arguments)
-                }));
-                claudeMessages.push({ role: 'assistant', content: toolUseBlocks });
+                const blocks = [];
+                if (typeof message.content === 'string' && message.content.trim()) {
+                    blocks.push({ type: 'text', text: message.content.trim() });
+                }
+                for (const tc of calls) {
+                    blocks.push({
+                        type: 'tool_use',
+                        id: tc.id,
+                        name: tc.function.name,
+                        input: safeParseJSON(tc.function.arguments)
+                    });
+                }
+                claudeMessages.push({ role: 'assistant', content: blocks });
             } else {
-                // 普通消息
                 if (typeof message.content === 'string') {
                     if (message.content) {
                         content.push({ type: 'text', text: message.content.trim() });
@@ -276,11 +300,25 @@ export class OpenAIConverter extends BaseConverter {
         }
 
         if (openaiRequest.tools?.length) {
-            claudeRequest.tools = openaiRequest.tools.map(t => ({
-                name: t.function.name,
-                description: t.function.description || '',
-                input_schema: t.function.parameters || { type: 'object', properties: {} }
-            }));
+            claudeRequest.tools = openaiRequest.tools
+                .map(t => {
+                    if (t.function) {
+                        return {
+                            name: t.function.name,
+                            description: t.function.description || '',
+                            input_schema: t.function.parameters || { type: 'object', properties: {} }
+                        };
+                    }
+                    if (t.name) {
+                        return {
+                            name: t.name,
+                            description: t.description || '',
+                            input_schema: t.input_schema || t.parameters || { type: 'object', properties: {} }
+                        };
+                    }
+                    return null;
+                })
+                .filter(Boolean);
             claudeRequest.tool_choice = this.buildClaudeToolChoice(openaiRequest.tool_choice);
         }
 

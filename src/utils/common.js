@@ -334,7 +334,8 @@ export async function handleStreamRequest(res, service, model, requestBody, from
     }
 
     let hasToolCall = false;
-    let hasMessageStop = false; // 跟踪是否已经发送过结束标志（message_stop / done）
+    let hasMessageStop = false; // 跟踪是否已经发送过流终止标记（message_stop / [DONE]）
+    let hasSentDone = false; // 单独跟踪 OpenAI 的 data: [DONE] 是否已发送
 
     try {
         // fs.writeFile('request'+Date.now()+'.json', JSON.stringify(requestBody));
@@ -385,6 +386,8 @@ export async function handleStreamRequest(res, service, model, requestBody, from
             const chunksToSend = Array.isArray(chunkToSend) ? chunkToSend : [chunkToSend];
 
             for (const chunk of chunksToSend) {
+                if (!chunk) continue;
+
                 // 再次检查客户端连接状态
                 if (clientDisconnected.value) {
                     break;
@@ -419,16 +422,14 @@ export async function handleStreamRequest(res, service, model, requestBody, from
                     }
                 }
 
-                // 防止重复发送结束标志
-                // OpenAI: choices[].finish_reason
-                // Claude: message_stop
-                // OpenAI Responses: done
-                // Gemini: candidates[].finishReason（如 STOP / MAX_TOKENS / SAFETY 等）
+                // 防止重复发送流终止标记
+                // Claude: message_stop 本身就是流终止标记
+                // OpenAI Responses: done 本身就是流终止标记
+                // OpenAI: finish_reason 只是内容结束标记，data: [DONE] 才是流终止标记（两者都需要）
+                // Gemini: finishReason 只是内容结束标记，也需要额外的流终止标记
                 if (
-                    chunk?.choices?.some(choice => choice?.finish_reason) ||
                     chunk?.type === 'message_stop' ||
-                    chunk?.type === 'done' ||
-                    chunk?.candidates?.some(candidate => candidate?.finishReason)
+                    chunk?.type === 'done'
                 ) {
                     hasMessageStop = true;
                 }
@@ -610,9 +611,9 @@ export async function handleStreamRequest(res, service, model, requestBody, from
             if (!res.writableEnded) {
                 try {
                     if (clientProtocol === MODEL_PROTOCOL_PREFIX.OPENAI) {
-                        if (!hasMessageStop) {
+                        if (!hasSentDone) {
                             res.write('data: [DONE]\n\n');
-                            hasMessageStop = true;
+                            hasSentDone = true;
                         }
                     } else if (clientProtocol === MODEL_PROTOCOL_PREFIX.OPENAI_RESPONSES) {
                         // OpenAI Responses 以 response.completed/response.incomplete（或 error）作为结束事件。
@@ -913,7 +914,6 @@ export async function handleContentGenerationRequest(req, res, service, endpoint
         processedRequestBody._monitorRequestId = CONFIG._monitorRequestId;
     }
 
-    // fs.writeFile('originalRequestBody'+Date.now()+'.json', JSON.stringify(originalRequestBody));
     if (getProtocolPrefix(fromProvider) !== getProtocolPrefix(toProvider)) {
         logger.info(`[Request Convert] Converting request from ${fromProvider} to ${toProvider}`);
         processedRequestBody = convertData(originalRequestBody, 'request', fromProvider, toProvider);

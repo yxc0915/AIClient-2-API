@@ -63,8 +63,6 @@ function renderPluginsList() {
     const emptyEl = document.getElementById('pluginsEmpty');
     
     if (!listEl) return;
-
-    listEl.innerHTML = '';
     
     if (pluginsList.length === 0) {
         if (emptyEl) emptyEl.style.display = 'flex';

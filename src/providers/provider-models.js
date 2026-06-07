@@ -76,6 +76,12 @@ export const PROVIDER_MODELS = {
         'claude-opus-4-5-20251101',
         'claude-sonnet-4-5',
         'claude-sonnet-4-5-20250929',
+        // 国产模型（Kiro 渠道透传）
+        'deepseek-3.2',
+        'minimax-m2.5',
+        'minimax-m2.1',
+        'glm-5',
+        'qwen3-coder-next',
     ],
     'openai-custom': [],
     'atlascloud': [],

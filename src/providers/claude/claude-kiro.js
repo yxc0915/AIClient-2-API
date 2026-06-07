@@ -164,6 +164,12 @@ const MODEL_CONTEXT_TOKENS = {
     "claude-sonnet-4-5-20250929": 200000,
     "claude-haiku-4-5": 200000,
     "claude-haiku-4-5-20251001": 200000,
+    // 国产模型（Kiro 渠道透传）
+    "deepseek-3.2": 128000,
+    "minimax-m2.5": 128000,
+    "minimax-m2.1": 128000,
+    "glm-5": 128000,
+    "qwen3-coder-next": 128000,
 };
 
 function normalizeContextLength(value) {

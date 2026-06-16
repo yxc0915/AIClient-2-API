@@ -12,7 +12,7 @@ import * as readline from 'readline';
 import { v4 as uuidv4 } from 'uuid';
 import open from 'open';
 import { configureTLSSidecar } from '../../utils/proxy-utils.js';
-import { formatExpiryTime, isRetryableNetworkError, formatExpiryLog, getRetryAfterMs } from '../../utils/common.js';
+import { formatExpiryTime, isRetryableNetworkError, formatExpiryLog, getRetryAfterMs, normalizeProviderErrorMessage } from '../../utils/common.js';
 import { getProviderModels } from '../provider-models.js';
 import { handleGeminiAntigravityOAuth } from '../../auth/oauth-handlers.js';
 import { getProxyConfigForProvider, getGoogleAuthProxyConfig, isTLSSidecarEnabledForProvider } from '../../utils/proxy-utils.js';
@@ -49,6 +49,7 @@ const ANTIGRAVITY_MODELS = getProviderModels(MODEL_PROVIDER.ANTIGRAVITY);
 const ANTIGRAVITY_CLIENT_TO_UPSTREAM_MODEL = {
     'gemini-3.1-pro-high': 'gemini-pro-agent',
     'gemini-3.1-pro-preview': 'gemini-pro-agent',
+    'gemini-3.5-flash-high': 'gemini-3.5-flash-low',
 };
 
 const ANTIGRAVITY_UPSTREAM_TO_CLIENT_MODELS = {
@@ -1363,6 +1364,7 @@ export class AntigravityApiService {
 
             if ((status === 401) && !isRetry) {
                 logger.info('[Antigravity API] Received 401 Unauthorized. Triggering background refresh via PoolManager...');
+                await normalizeProviderErrorMessage(error, { status: 401, context: 'callApi' });
                 
                 // 标记当前凭证为不健康（会自动进入刷新队列）
                 const poolManager = getProviderPoolManager();
@@ -1383,6 +1385,7 @@ export class AntigravityApiService {
             if (status === 429) {
                 const retryAfter = getRetryAfterMs(error);
                 if (retryAfter !== null) {
+                    await normalizeProviderErrorMessage(error, { status: 429, context: 'callApi' });
                     logger.warn(`[Antigravity API] Received 429 with Retry-After: ${retryAfter}ms. Throwing to upper layer.`);
                     throw error;
                 }
@@ -1413,6 +1416,7 @@ export class AntigravityApiService {
             }
 
             if (status >= 500 && status < 600 && retryCount < maxRetries) {
+                await normalizeProviderErrorMessage(error, { status, context: 'callApi' });
                 const delay = baseDelay * Math.pow(2, retryCount);
                 logger.info(`[Antigravity API] Server error ${status}. Retrying in ${delay}ms...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
@@ -1444,6 +1448,9 @@ export class AntigravityApiService {
                     'User-Agent': this.userAgent
                 },
                 responseType: 'stream',
+                // 阻止 gaxios 在非 2xx 时自行消耗流并抛异常，
+                // 由下方 res.status !== 200 统一处理，保证流仍可读取
+                validateStatus: () => true,
                 body: JSON.stringify(body)
             };
 
@@ -1452,10 +1459,14 @@ export class AntigravityApiService {
 
             if (res.status !== 200) {
                 let errorBody = '';
-                for await (const chunk of res.data) {
-                    errorBody += chunk.toString();
-                }
-                throw new Error(`Upstream API Error (Status ${res.status}): ${errorBody}`);
+                try {
+                    for await (const chunk of res.data) {
+                        errorBody += chunk.toString();
+                    }
+                } catch (_) { /* 流可能已关闭 */ }
+                const upstreamError = new Error(`Upstream API Error (Status ${res.status}): ${errorBody}`);
+                upstreamError.response = { status: res.status, data: errorBody };
+                throw upstreamError;
             }
 
             yield* this.parseSSEStream(res.data);
@@ -1471,6 +1482,7 @@ export class AntigravityApiService {
 
             if ((status === 401) && !isRetry) {
                 logger.info('[Antigravity API] Received 401 Unauthorized during stream. Triggering background refresh via PoolManager...');
+                await normalizeProviderErrorMessage(error, { status: 401, context: 'stream' });
                 
                 // 标记当前凭证为不健康（会自动进入刷新队列）
                 const poolManager = getProviderPoolManager();
@@ -1491,6 +1503,7 @@ export class AntigravityApiService {
             if (status === 429) {
                 const retryAfter = getRetryAfterMs(error);
                 if (retryAfter !== null) {
+                    await normalizeProviderErrorMessage(error, { status: 429, context: 'stream' });
                     logger.warn(`[Antigravity API] Received 429 with Retry-After: ${retryAfter}ms during stream. Throwing to upper layer.`);
                     throw error;
                 }
@@ -1525,6 +1538,7 @@ export class AntigravityApiService {
             }
 
             if (status >= 500 && status < 600 && retryCount < maxRetries) {
+                await normalizeProviderErrorMessage(error, { status, context: 'stream' });
                 const delay = baseDelay * Math.pow(2, retryCount);
                 logger.info(`[Antigravity API] Server error ${status} during stream. Retrying in ${delay}ms...`);
                 await new Promise(resolve => setTimeout(resolve, delay));

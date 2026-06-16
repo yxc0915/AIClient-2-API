@@ -2777,37 +2777,37 @@ function showKiroBatchImportModal() {
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="batch-import-instructions" style="margin-bottom: 16px; padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
-                    <p style="margin: 0; font-size: 14px; color: #166534;">
+                <div class="batch-import-instructions" style="margin-bottom: 16px; padding: 12px; background: var(--success-bg); border: 1px solid var(--success-bg-light); border-radius: 8px;">
+                    <p style="margin: 0; font-size: 14px; color: var(--success-text);">
                         <i class="fas fa-info-circle"></i>
                         <span data-i18n="oauth.kiro.batchImportInstructions">${t('oauth.kiro.batchImportInstructions')}</span>
                     </p>
                 </div>
                 <div class="form-group">
-                    <label for="batchRefreshTokens" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">
+                    <label for="batchRefreshTokens" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
                         <span data-i18n="oauth.kiro.refreshTokensLabel">${t('oauth.kiro.refreshTokensLabel')}</span>
                     </label>
                     <textarea 
                         id="batchRefreshTokens" 
                         rows="10" 
-                        style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-family: monospace; font-size: 13px; resize: vertical;"
+                        style="width: 100%; padding: 12px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 13px; resize: vertical;"
                         placeholder="${t('oauth.kiro.refreshTokensPlaceholder')}"
                         data-i18n-placeholder="oauth.kiro.refreshTokensPlaceholder"
                     ></textarea>
                 </div>
-                <div class="batch-import-stats" id="batchImportStats" style="display: none; margin-top: 12px; padding: 12px; background: #f3f4f6; border-radius: 8px;">
+                <div class="batch-import-stats" id="batchImportStats" style="display: none; margin-top: 12px; padding: 12px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span data-i18n="oauth.kiro.tokenCount">${t('oauth.kiro.tokenCount')}</span>
-                        <span id="tokenCountValue" style="font-weight: 600;">0</span>
+                        <span id="tokenCountValue" style="font-weight: 600; color: var(--primary-color);">0</span>
                     </div>
                 </div>
                 <div class="batch-import-progress" id="batchImportProgress" style="display: none; margin-top: 16px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <i class="fas fa-spinner fa-spin" style="color: #10b981;"></i>
+                    <div style="display: flex; align-items: center; gap: 12px; color: var(--text-primary);">
+                        <i class="fas fa-spinner fa-spin" style="color: var(--primary-color);"></i>
                         <span data-i18n="oauth.kiro.importing">${t('oauth.kiro.importing')}</span>
                     </div>
-                    <div class="progress-bar" style="margin-top: 8px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
-                        <div id="importProgressBar" style="height: 100%; width: 0%; background: #10b981; transition: width 0.3s;"></div>
+                    <div class="progress-bar" style="margin-top: 8px; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                        <div id="importProgressBar" style="height: 100%; width: 0%; background: var(--primary-color); transition: width 0.3s;"></div>
                     </div>
                 </div>
                 <div class="batch-import-result" id="batchImportResult" style="display: none; margin-top: 16px; padding: 12px; border-radius: 8px;"></div>
@@ -2870,10 +2870,10 @@ function showKiroBatchImportModal() {
         progressBar.style.width = '0%';
         
         // 创建实时结果显示区域
-        resultDiv.style.cssText = 'display: block; margin-top: 16px; padding: 12px; border-radius: 8px; background: #f3f4f6; border: 1px solid #d1d5db;';
+        resultDiv.style.cssText = 'display: block; margin-top: 16px; padding: 12px; border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color);';
         resultDiv.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <i class="fas fa-spinner fa-spin" style="color: #10b981;"></i>
+                <i class="fas fa-spinner fa-spin" style="color: var(--primary-color);"></i>
                 <strong id="batchProgressText">${t('oauth.kiro.importingProgress', { current: 0, total: tokens.length })}</strong>
             </div>
             <div id="batchResultsList" style="max-height: 200px; overflow-y: auto; font-size: 12px; margin-top: 8px;"></div>
@@ -2947,15 +2947,15 @@ function showKiroBatchImportModal() {
                                     
                                     // 添加结果项
                                     const resultItem = document.createElement('div');
-                                    resultItem.style.cssText = 'padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.1);';
-                                    
+                                    resultItem.style.cssText = 'padding: 4px 0; border-bottom: 1px solid var(--border-color);';
+
                                     if (current.success) {
-                                        resultItem.innerHTML = `Token ${current.index}: <span style="color: #166534;">✓ ${current.path}</span>`;
+                                        resultItem.innerHTML = `Token ${current.index}: <span style="color: var(--success-text);">✓ ${current.path}</span>`;
                                     } else if (current.error === 'duplicate') {
-                                        resultItem.innerHTML = `Token ${current.index}: <span style="color: #d97706;">⚠ ${t('oauth.kiro.duplicateToken')}</span>
-                                            ${current.existingPath ? `<span style="color: #666; font-size: 11px;">(${current.existingPath})</span>` : ''}`;
+                                        resultItem.innerHTML = `Token ${current.index}: <span style="color: var(--warning-text);">⚠ ${t('oauth.kiro.duplicateToken')}</span>
+                                            ${current.existingPath ? `<span style="color: var(--text-tertiary); font-size: 11px;">(${current.existingPath})</span>` : ''}`;
                                     } else {
-                                        resultItem.innerHTML = `Token ${current.index}: <span style="color: #991b1b;">✗ ${current.error}</span>`;
+                                        resultItem.innerHTML = `Token ${current.index}: <span style="color: var(--danger-text);">✗ ${current.error}</span>`;
                                     }
                                     
                                     resultsList.appendChild(resultItem);
@@ -2972,15 +2972,15 @@ function showKiroBatchImportModal() {
                                     
                                     let resultClass, resultIcon, resultMessage;
                                     if (isAllSuccess) {
-                                        resultClass = 'background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;';
+                                        resultClass = 'background: var(--success-bg); border: 1px solid var(--success-bg-light); color: var(--success-text);';
                                         resultIcon = 'fa-check-circle';
                                         resultMessage = t('oauth.kiro.importSuccess', { count: data.successCount });
                                     } else if (isAllFailed) {
-                                        resultClass = 'background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;';
+                                        resultClass = 'background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-text);';
                                         resultIcon = 'fa-times-circle';
                                         resultMessage = t('oauth.kiro.importAllFailed', { count: data.failedCount });
                                     } else {
-                                        resultClass = 'background: #fffbeb; border: 1px solid #fde68a; color: #92400e;';
+                                        resultClass = 'background: var(--warning-bg); border: 1px solid var(--warning-border); color: var(--warning-text);';
                                         resultIcon = 'fa-exclamation-triangle';
                                         resultMessage = t('oauth.kiro.importPartial', { success: data.successCount, failed: data.failedCount });
                                     }
@@ -3016,7 +3016,7 @@ function showKiroBatchImportModal() {
         } catch (error) {
             console.error('[Kiro Batch Import] Failed:', error);
             progressDiv.style.display = 'none';
-            resultDiv.style.cssText = 'display: block; margin-top: 16px; padding: 12px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;';
+            resultDiv.style.cssText = 'display: block; margin-top: 16px; padding: 12px; border-radius: 8px; background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-text);';
             resultDiv.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-times-circle"></i>
@@ -3052,89 +3052,89 @@ function showKiroAwsImportModal() {
     modal.innerHTML = `
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
-                <h3><i class="fas fa-cloud-upload-alt" style="color: #ff9900;"></i> <span data-i18n="oauth.kiro.awsImport">${t('oauth.kiro.awsImport')}</span></h3>
+                <h3><i class="fas fa-cloud-upload-alt" style="color: var(--primary-color);"></i> <span data-i18n="oauth.kiro.awsImport">${t('oauth.kiro.awsImport')}</span></h3>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="aws-import-instructions" style="margin-bottom: 16px; padding: 12px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px;">
-                    <p style="margin: 0; font-size: 14px; color: #9a3412;">
+                <div class="aws-import-instructions" style="margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px;">
+                    <p style="margin: 0; font-size: 14px; color: var(--text-primary);">
                         <i class="fas fa-info-circle"></i>
                         <span data-i18n="oauth.kiro.awsImportInstructions">${t('oauth.kiro.awsImportInstructions')}</span>
                     </p>
-                    <p style="margin: 8px 0 0 0; font-size: 12px; color: #c2410c;">
+                    <p style="margin: 8px 0 0 0; font-size: 12px; color: var(--text-secondary);">
                         <i class="fas fa-folder-open"></i>
-                        <code style="background: #fed7aa; padding: 2px 6px; border-radius: 4px;">C:\\Users\\{username}\\.aws\\sso\\cache</code>
+                        <code style="background: var(--bg-tertiary); color: var(--text-primary); padding: 2px 6px; border-radius: 4px;">C:\\Users\\{username}\\.aws\\sso\\cache</code>
                     </p>
                 </div>
-                
+
                 <!-- 输入模式切换 -->
                 <div class="input-mode-toggle" style="display: flex; gap: 8px; margin-bottom: 16px;">
-                    <button class="mode-btn active" data-mode="file" style="flex: 1; padding: 10px 16px; border: 2px solid #ff9900; border-radius: 8px; background: #fff7ed; color: #9a3412; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <button class="mode-btn active" data-mode="file" style="flex: 1; padding: 10px 16px; border: 2px solid var(--primary-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-weight: 600; cursor: pointer; transition: all 0.2s;">
                         <i class="fas fa-file-upload"></i>
                         <span data-i18n="oauth.kiro.awsModeFile">${t('oauth.kiro.awsModeFile')}</span>
                     </button>
-                    <button class="mode-btn" data-mode="json" style="flex: 1; padding: 10px 16px; border: 2px solid #d1d5db; border-radius: 8px; background: white; color: #6b7280; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <button class="mode-btn" data-mode="json" style="flex: 1; padding: 10px 16px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-tertiary); font-weight: 600; cursor: pointer; transition: all 0.2s;">
                         <i class="fas fa-code"></i>
                         <span data-i18n="oauth.kiro.awsModeJson">${t('oauth.kiro.awsModeJson')}</span>
                     </button>
                 </div>
-                
+
                 <!-- 文件上传模式 -->
                 <div class="file-mode-section" id="fileModeSection">
                     <div class="form-group" style="margin-bottom: 16px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
                             <span data-i18n="oauth.kiro.awsUploadFiles">${t('oauth.kiro.awsUploadFiles')}</span>
                         </label>
-                        <div class="aws-file-upload-area" style="border: 2px dashed #d1d5db; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                        <div class="aws-file-upload-area" style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s;">
                             <input type="file" id="awsFilesInput" multiple accept=".json" style="display: none;">
-                            <i class="fas fa-cloud-upload-alt" style="font-size: 36px; color: #9ca3af; margin-bottom: 8px;"></i>
-                            <p style="margin: 0; color: #6b7280;" data-i18n="oauth.kiro.awsDragDrop">${t('oauth.kiro.awsDragDrop')}</p>
-                            <p style="margin: 4px 0 0 0; font-size: 12px; color: #9ca3af;" data-i18n="oauth.kiro.awsClickUpload">${t('oauth.kiro.awsClickUpload')}</p>
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 36px; color: var(--text-tertiary); margin-bottom: 8px;"></i>
+                            <p style="margin: 0; color: var(--text-secondary);" data-i18n="oauth.kiro.awsDragDrop">${t('oauth.kiro.awsDragDrop')}</p>
+                            <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-tertiary);" data-i18n="oauth.kiro.awsClickUpload">${t('oauth.kiro.awsClickUpload')}</p>
                         </div>
-                        <p style="margin: 8px 0 0 0; font-size: 12px; color: #6b7280;">
-                            <i class="fas fa-lightbulb" style="color: #f59e0b;"></i>
+                        <p style="margin: 8px 0 0 0; font-size: 12px; color: var(--text-secondary);">
+                            <i class="fas fa-lightbulb" style="color: var(--warning-text);"></i>
                             <span data-i18n="oauth.kiro.awsFileHint">${t('oauth.kiro.awsFileHint')}</span>
                         </p>
                     </div>
-                    
+
                     <div class="aws-files-list" id="awsFilesList" style="display: none; margin-bottom: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <label style="font-weight: 600; color: #374151;" data-i18n="oauth.kiro.awsSelectedFiles">${t('oauth.kiro.awsSelectedFiles')}</label>
-                            <button id="clearFilesBtn" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 4px; transition: all 0.2s;">
+                            <label style="font-weight: 600; color: var(--text-primary);" data-i18n="oauth.kiro.awsSelectedFiles">${t('oauth.kiro.awsSelectedFiles')}</label>
+                            <button id="clearFilesBtn" style="background: none; border: none; color: var(--danger-text); cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 4px; transition: all 0.2s;">
                                 <i class="fas fa-trash-alt"></i>
                                 <span data-i18n="oauth.kiro.awsClearFiles">${t('oauth.kiro.awsClearFiles')}</span>
                             </button>
                         </div>
-                        <div id="awsFilesContainer" style="background: #f9fafb; border-radius: 8px; padding: 12px;"></div>
+                        <div id="awsFilesContainer" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px;"></div>
                     </div>
                 </div>
-                
+
                 <!-- JSON 输入模式 -->
                 <div class="json-mode-section" id="jsonModeSection" style="display: none;">
                     <div class="form-group" style="margin-bottom: 16px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
                             <span data-i18n="oauth.kiro.awsJsonInput">${t('oauth.kiro.awsJsonInput')}</span>
                         </label>
-                        <textarea 
-                            id="awsJsonInput" 
-                            rows="12" 
-                            style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-family: monospace; font-size: 13px; resize: vertical;"
+                        <textarea
+                            id="awsJsonInput"
+                            rows="12"
+                            style="width: 100%; padding: 12px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 13px; resize: vertical;"
                             placeholder="${t('oauth.kiro.awsJsonPlaceholderSimple')}"
                             data-i18n-placeholder="oauth.kiro.awsJsonPlaceholderSimple"
                         ></textarea>
-                        <p style="margin: 8px 0 0 0; font-size: 12px; color: #6b7280;">
-                            <i class="fas fa-lightbulb" style="color: #f59e0b;"></i>
+                        <p style="margin: 8px 0 0 0; font-size: 12px; color: var(--text-secondary);">
+                            <i class="fas fa-lightbulb" style="color: var(--warning-text);"></i>
                             <span data-i18n="oauth.kiro.awsJsonHint">${t('oauth.kiro.awsJsonHint')}</span>
                         </p>
                     </div>
-                    <details style="margin-bottom: 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;">
-                        <summary style="padding: 12px; cursor: pointer; font-weight: 600; color: #374151; user-select: none;">
-                            <i class="fas fa-code" style="color: #ff9900; margin-right: 8px;"></i>
+                    <details style="margin-bottom: 16px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px;">
+                        <summary style="padding: 12px; cursor: pointer; font-weight: 600; color: var(--text-primary); user-select: none;">
+                            <i class="fas fa-code" style="color: var(--primary-color); margin-right: 8px;"></i>
                             <span data-i18n="oauth.kiro.awsJsonExample">${t('oauth.kiro.awsJsonExample')}</span>
                         </summary>
-                        <div style="padding: 12px; background: #1f2937; border-radius: 0 0 8px 8px;">
-                            <div style="color: #10b981; font-family: monospace; font-size: 12px; margin-bottom: 12px;">
-                                <div style="color: #9ca3af; margin-bottom: 8px;">// 单个凭据导入示例：</div>
+                        <div style="padding: 12px; background: var(--code-bg, #1f2937); border-radius: 0 0 8px 8px;">
+                            <div style="color: var(--success-text); font-family: monospace; font-size: 12px; margin-bottom: 12px;">
+                                <div style="color: var(--text-tertiary); margin-bottom: 8px;">// 单个凭据导入示例：</div>
                                 <pre style="margin: 0; white-space: pre; overflow-x: auto;">{
   "clientId": "VYZBSTx3Q7QEq1W3Wn8c5nVzLWVhc3QtMQ",
   "clientSecret": "eyJraWQi...OAMc",
@@ -3146,8 +3146,8 @@ function showKiroAwsImportModal() {
   "region": "us-east-1"
 }</pre>
                             </div>
-                            <div style="color: #10b981; font-family: monospace; font-size: 12px; margin-top: 16px;">
-                                <div style="color: #9ca3af; margin-bottom: 8px;">// 批量导入示例（JSON数组）：</div>
+                            <div style="color: var(--success-text); font-family: monospace; font-size: 12px; margin-top: 16px;">
+                                <div style="color: var(--text-tertiary); margin-bottom: 8px;">// 批量导入示例（JSON数组）：</div>
                                 <pre style="margin: 0; white-space: pre; overflow-x: auto;">[
   {
     "clientId": "VYZBSTx3Q7QEq1W3Wn8c5nVzLWVhc3QtMQ",
@@ -3166,7 +3166,7 @@ function showKiroAwsImportModal() {
   }
 ]</pre>
                             </div>
-                            <div style="color: #fbbf24; font-size: 11px; margin-top: 12px; padding: 8px; background: rgba(251, 191, 36, 0.1); border-radius: 4px;">
+                            <div style="color: var(--warning-text); font-size: 11px; margin-top: 12px; padding: 8px; background: var(--warning-bg); border-radius: 4px;">
                                 <i class="fas fa-info-circle"></i>
                                 <strong>注意：</strong>AWS企业用户需要额外添加 <code style="background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 2px;">idcRegion</code> 字段
                             </div>
@@ -3177,11 +3177,11 @@ function showKiroAwsImportModal() {
                 <div class="aws-validation-result" id="awsValidationResult" style="display: none; margin-bottom: 16px; padding: 12px; border-radius: 8px;"></div>
                 
                 <div class="aws-json-preview" id="awsJsonPreview" style="display: none; margin-bottom: 16px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
                         <i class="fas fa-eye"></i>
                         <span data-i18n="oauth.kiro.awsPreviewJson">${t('oauth.kiro.awsPreviewJson')}</span>
                     </label>
-                    <pre id="awsJsonContent" style="background: #1f2937; color: #10b981; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 200px; overflow: auto; white-space: pre-wrap; word-break: break-all;"></pre>
+                    <pre id="awsJsonContent" style="background: var(--code-bg, #1f2937); color: var(--success-text); padding: 16px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 200px; overflow: auto; white-space: pre-wrap; word-break: break-all;"></pre>
                 </div>
             </div>
             <div class="modal-footer">
@@ -3231,31 +3231,31 @@ function showKiroAwsImportModal() {
     
     // 清空按钮 hover 效果
     clearFilesBtn.addEventListener('mouseenter', () => {
-        clearFilesBtn.style.background = '#fef2f2';
+        clearFilesBtn.style.background = 'var(--danger-bg)';
     });
     clearFilesBtn.addEventListener('mouseleave', () => {
         clearFilesBtn.style.background = 'none';
     });
-    
+
     // 模式切换
     modeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const mode = btn.dataset.mode;
             if (mode === currentMode) return;
-            
+
             currentMode = mode;
-            
+
             // 更新按钮样式
             modeBtns.forEach(b => {
                 if (b.dataset.mode === mode) {
-                    b.style.borderColor = '#ff9900';
-                    b.style.background = '#fff7ed';
-                    b.style.color = '#9a3412';
+                    b.style.borderColor = 'var(--primary-color)';
+                    b.style.background = 'var(--bg-secondary)';
+                    b.style.color = 'var(--text-primary)';
                     b.classList.add('active');
                 } else {
-                    b.style.borderColor = '#d1d5db';
-                    b.style.background = 'white';
-                    b.style.color = '#6b7280';
+                    b.style.borderColor = 'var(--border-color)';
+                    b.style.background = 'var(--bg-primary)';
+                    b.style.color = 'var(--text-tertiary)';
                     b.classList.remove('active');
                 }
             });
@@ -3296,7 +3296,7 @@ function showKiroAwsImportModal() {
             mergedCredentials = JSON.parse(inputValue);
             validateAndShowResult();
         } catch (error) {
-            validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;';
+            validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-text);';
             validationResult.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-exclamation-triangle"></i>
@@ -3309,25 +3309,25 @@ function showKiroAwsImportModal() {
             mergedCredentials = null;
         }
     }
-    
+
     // 文件上传区域交互
     uploadArea.addEventListener('click', () => fileInput.click());
-    
+
     uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
-        uploadArea.style.borderColor = '#ff9900';
-        uploadArea.style.background = '#fffbeb';
+        uploadArea.style.borderColor = 'var(--primary-color)';
+        uploadArea.style.background = 'var(--bg-tertiary)';
     });
-    
+
     uploadArea.addEventListener('dragleave', (e) => {
         e.preventDefault();
-        uploadArea.style.borderColor = '#d1d5db';
+        uploadArea.style.borderColor = 'var(--border-color)';
         uploadArea.style.background = 'transparent';
     });
-    
+
     uploadArea.addEventListener('drop', (e) => {
         e.preventDefault();
-        uploadArea.style.borderColor = '#d1d5db';
+        uploadArea.style.borderColor = 'var(--border-color)';
         uploadArea.style.background = 'transparent';
         
         const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.json'));
@@ -3390,19 +3390,19 @@ function showKiroAwsImportModal() {
         
         for (const file of uploadedFiles) {
             const fileDiv = document.createElement('div');
-            fileDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: white; border-radius: 4px; margin-bottom: 4px;';
+            fileDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 4px;';
             fileDiv.dataset.filename = file.name;
-            
+
             const fields = Object.keys(file.content).slice(0, 5).join(', ');
             const moreFields = Object.keys(file.content).length > 5 ? '...' : '';
-            
+
             fileDiv.innerHTML = `
                 <div style="flex: 1; min-width: 0;">
-                    <i class="fas fa-file-code" style="color: #ff9900; margin-right: 8px;"></i>
-                    <span style="font-weight: 500;">${file.name}</span>
-                    <div style="font-size: 11px; color: #6b7280; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fields}${moreFields}</div>
+                    <i class="fas fa-file-code" style="color: var(--primary-color); margin-right: 8px;"></i>
+                    <span style="font-weight: 500; color: var(--text-primary);">${file.name}</span>
+                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fields}${moreFields}</div>
                 </div>
-                <button class="remove-file-btn" data-filename="${file.name}" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 4px 8px; margin-left: 8px; flex-shrink: 0;">
+                <button class="remove-file-btn" data-filename="${file.name}" style="background: none; border: none; color: var(--danger-text); cursor: pointer; padding: 4px 8px; margin-left: 8px; flex-shrink: 0;">
                     <i class="fas fa-times"></i>
                 </button>
             `;
@@ -3493,28 +3493,28 @@ function showKiroAwsImportModal() {
             // 构建批量验证结果HTML
             const credentialsHtml = credentialsValidation.map(cv => {
                 const statusIcon = cv.isValid ? '✓' : '✗';
-                const statusColor = cv.isValid ? '#166534' : '#991b1b';
+                const statusColor = cv.isValid ? 'var(--success-text)' : 'var(--danger-text)';
                 const fieldsHtml = cv.fields.map(f => `
                     <span style="margin-right: 8px;">${f.key}: ${f.has
-                        ? `<code style="background: #dcfce7; padding: 1px 4px; border-radius: 2px; color: #166534;">✓</code>`
-                        : `<code style="background: #fecaca; padding: 1px 4px; border-radius: 2px; color: #991b1b;">✗</code>`
+                        ? `<code style="background: var(--success-bg); padding: 1px 4px; border-radius: 2px; color: var(--success-text);">✓</code>`
+                        : `<code style="background: var(--danger-bg); padding: 1px 4px; border-radius: 2px; color: var(--danger-text);">✗</code>`
                     }</span>
                 `).join('');
-                
+
                 return `
-                    <div style="padding: 8px; margin-bottom: 4px; background: ${cv.isValid ? '#f0fdf4' : '#fef2f2'}; border: 1px solid ${cv.isValid ? '#bbf7d0' : '#fecaca'}; border-radius: 4px;">
+                    <div style="padding: 8px; margin-bottom: 4px; background: ${cv.isValid ? 'var(--success-bg)' : 'var(--danger-bg)'}; border: 1px solid ${cv.isValid ? 'var(--success-bg-light)' : 'var(--danger-border)'}; border-radius: 4px;">
                         <div style="font-weight: 600; color: ${statusColor}; margin-bottom: 4px;">
                             ${statusIcon} 凭据 ${cv.index}
                         </div>
-                        <div style="font-size: 12px; color: #6b7280;">
+                        <div style="font-size: 12px; color: var(--text-secondary);">
                             ${fieldsHtml}
                         </div>
                     </div>
                 `;
             }).join('');
-            
+
             if (allValid) {
-                validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;';
+                validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: var(--success-bg); border: 1px solid var(--success-bg-light); color: var(--success-text);';
                 validationResult.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                         <i class="fas fa-check-circle"></i>
@@ -3528,7 +3528,7 @@ function showKiroAwsImportModal() {
             } else {
                 const validCount = credentialsValidation.filter(cv => cv.isValid).length;
                 const invalidCount = credentialsValidation.length - validCount;
-                validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;';
+                validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-text);';
                 validationResult.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                         <i class="fas fa-exclamation-triangle"></i>
@@ -3538,8 +3538,8 @@ function showKiroAwsImportModal() {
                     <div style="max-height: 200px; overflow-y: auto;">
                         ${credentialsHtml}
                     </div>
-                    <p style="margin: 12px 0 0 0; font-size: 12px; padding: 8px; background: #fee2e2; border-radius: 4px;">
-                        <i class="fas fa-lightbulb" style="color: #dc2626;"></i>
+                    <p style="margin: 12px 0 0 0; font-size: 12px; padding: 8px; background: var(--danger-bg); border-radius: 4px;">
+                        <i class="fas fa-lightbulb" style="color: var(--danger-text);"></i>
                         请确保每个凭据都包含所有必需字段：clientId, clientSecret, accessToken, refreshToken
                     </p>
                 `;
@@ -3583,13 +3583,13 @@ function showKiroAwsImportModal() {
             
             const fieldsHtml = fieldsList.map(f => `
                 <li>${f.key}: ${f.has
-                    ? `<code style="background: #dcfce7; padding: 1px 4px; border-radius: 2px; color: #166534;">✓ ${t('common.found')}</code>`
-                    : `<code style="background: #fecaca; padding: 1px 4px; border-radius: 2px; color: #991b1b;">✗ ${t('common.missing')}</code>`
+                    ? `<code style="background: var(--success-bg); padding: 1px 4px; border-radius: 2px; color: var(--success-text);">✓ ${t('common.found')}</code>`
+                    : `<code style="background: var(--danger-bg); padding: 1px 4px; border-radius: 2px; color: var(--danger-text);">✗ ${t('common.missing')}</code>`
                 }</li>
             `).join('');
-            
+
             if (isValid) {
-                validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;';
+                validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: var(--success-bg); border: 1px solid var(--success-bg-light); color: var(--success-text);';
                 validationResult.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-check-circle"></i>
@@ -3602,7 +3602,7 @@ function showKiroAwsImportModal() {
                 submitBtn.disabled = false;
             } else {
                 const missingCount = fieldsList.filter(f => !f.has).length;
-                validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;';
+                validationResult.style.cssText = 'display: block; margin-bottom: 16px; padding: 12px; border-radius: 8px; background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-text);';
                 validationResult.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-exclamation-triangle"></i>
@@ -3612,8 +3612,8 @@ function showKiroAwsImportModal() {
                     <ul style="margin: 8px 0 0 24px; font-size: 13px; list-style: none; padding: 0;">
                         ${fieldsHtml}
                     </ul>
-                    <p style="margin: 12px 0 0 0; font-size: 12px; padding: 8px; background: #fee2e2; border-radius: 4px;">
-                        <i class="fas fa-lightbulb" style="color: #dc2626;"></i>
+                    <p style="margin: 12px 0 0 0; font-size: 12px; padding: 8px; background: var(--danger-bg); border-radius: 4px;">
+                        <i class="fas fa-lightbulb" style="color: var(--danger-text);"></i>
                         <span data-i18n="oauth.kiro.awsUploadMore">${t('oauth.kiro.awsUploadMore')}</span>
                     </p>
                 `;
@@ -3687,14 +3687,14 @@ function showKiroAwsImportModal() {
                 }));
                 
                 // 创建进度显示区域
-                validationResult.style.cssText = 'display: block; margin-top: 16px; padding: 12px; border-radius: 8px; background: #f3f4f6; border: 1px solid #d1d5db;';
+                validationResult.style.cssText = 'display: block; margin-top: 16px; padding: 12px; border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color);';
                 validationResult.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <i class="fas fa-spinner fa-spin" style="color: #ff9900;"></i>
+                        <i class="fas fa-spinner fa-spin" style="color: var(--primary-color);"></i>
                         <strong id="awsBatchProgressText">${t('oauth.kiro.importingProgress', { current: 0, total: credentialsToImport.length })}</strong>
                     </div>
-                    <div class="progress-bar" style="margin: 8px 0; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
-                        <div id="awsImportProgressBar" style="height: 100%; width: 0%; background: #ff9900; transition: width 0.3s;"></div>
+                    <div class="progress-bar" style="margin: 8px 0; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                        <div id="awsImportProgressBar" style="height: 100%; width: 0%; background: var(--primary-color); transition: width 0.3s;"></div>
                     </div>
                     <div id="awsBatchResultsList" style="max-height: 200px; overflow-y: auto; font-size: 12px; margin-top: 8px;"></div>
                 `;
@@ -3762,15 +3762,15 @@ function showKiroAwsImportModal() {
                                         
                                         // 添加结果项
                                         const resultItem = document.createElement('div');
-                                        resultItem.style.cssText = 'padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.1);';
-                                        
+                                        resultItem.style.cssText = 'padding: 4px 0; border-bottom: 1px solid var(--border-color);';
+
                                         if (current.success) {
-                                            resultItem.innerHTML = `凭据 ${current.index}: <span style="color: #166534;">✓ ${current.path}</span>`;
+                                            resultItem.innerHTML = `凭据 ${current.index}: <span style="color: var(--success-text);">✓ ${current.path}</span>`;
                                         } else if (current.error === 'duplicate') {
-                                            resultItem.innerHTML = `凭据 ${current.index}: <span style="color: #d97706;">⚠ ${t('oauth.kiro.duplicateCredentials')}</span>
-                                                ${current.existingPath ? `<span style="color: #666; font-size: 11px;">(${current.existingPath})</span>` : ''}`;
+                                            resultItem.innerHTML = `凭据 ${current.index}: <span style="color: var(--warning-text);">⚠ ${t('oauth.kiro.duplicateCredentials')}</span>
+                                                ${current.existingPath ? `<span style="color: var(--text-tertiary); font-size: 11px;">(${current.existingPath})</span>` : ''}`;
                                         } else {
-                                            resultItem.innerHTML = `凭据 ${current.index}: <span style="color: #991b1b;">✗ ${current.error}</span>`;
+                                            resultItem.innerHTML = `凭据 ${current.index}: <span style="color: var(--danger-text);">✗ ${current.error}</span>`;
                                         }
                                         
                                         resultsList.appendChild(resultItem);
@@ -3784,15 +3784,15 @@ function showKiroAwsImportModal() {
                                         
                                         let resultClass, resultIcon, resultMessage;
                                         if (isAllSuccess) {
-                                            resultClass = 'background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;';
+                                            resultClass = 'background: var(--success-bg); border: 1px solid var(--success-bg-light); color: var(--success-text);';
                                             resultIcon = 'fa-check-circle';
                                             resultMessage = t('oauth.kiro.awsImportSuccess') + ` (${data.successCount})`;
                                         } else if (isAllFailed) {
-                                            resultClass = 'background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;';
+                                            resultClass = 'background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-text);';
                                             resultIcon = 'fa-times-circle';
                                             resultMessage = t('oauth.kiro.awsImportAllFailed', { count: data.failedCount });
                                         } else {
-                                            resultClass = 'background: #fffbeb; border: 1px solid #fde68a; color: #92400e;';
+                                            resultClass = 'background: var(--warning-bg); border: 1px solid var(--warning-border); color: var(--warning-text);';
                                             resultIcon = 'fa-exclamation-triangle';
                                             resultMessage = t('oauth.kiro.importPartial', { success: data.successCount, failed: data.failedCount });
                                         }
@@ -3864,7 +3864,7 @@ function showKiroAwsImportModal() {
             console.error('AWS import failed:', error);
             
             // 更新错误显示
-            validationResult.style.cssText = 'display: block; margin-top: 16px; padding: 12px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;';
+            validationResult.style.cssText = 'display: block; margin-top: 16px; padding: 12px; border-radius: 8px; background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-text);';
             validationResult.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-times-circle"></i>
